@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 // Core
 import { ConnectionPool } from '@core/connection-pool';
@@ -34,8 +35,20 @@ import { Environment } from '@enums/environment';
     MongooseModule.forFeature([
       { name: Account.name, schema: AccountSchema }
     ]),
+    ClientsModule.registerAsync([{
+      name: 'MESSAGE_BROKER',
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        transport: Transport.REDIS,
+        options: {
+          host: configService.get<string>(Environment.REDIS_HOST),
+          port: configService.get<number>(Environment.REDIS_PORT),
+        }
+      }),
+    }]),
     ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
   ],
   controllers: [],
   providers: [ConnectionPool, Startup, AccountRepository, ManagementService],

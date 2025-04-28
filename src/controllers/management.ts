@@ -10,6 +10,6 @@ export class ManagementController {
 
     @MessagePattern('tiktok.subscribe')
     async subscribe(@Payload() username: string) {
-        this.management_service;
+        await this.management_service.subscribe(username);
     }
 }
