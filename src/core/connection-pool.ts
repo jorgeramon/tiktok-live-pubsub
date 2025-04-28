@@ -1,18 +1,25 @@
 // NestJS
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { ClientProxy } from "@nestjs/microservices";
 
 // Local
 import { LiveConnection } from "./live-connection";
 
 // NPM
 import { takeUntil } from "rxjs";
+import { IEndEvent } from "@interfaces/end-event";
+import { IChatEvent } from "@interfaces/chat-event";
 
 @Injectable()
 export class ConnectionPool {
 
     private readonly logger: Logger = new Logger(ConnectionPool.name);
     private pool: LiveConnection[] = [];
+
+    constructor(
+        @Inject('MESSAGE_BROKER') private readonly client: ClientProxy
+    ) { }
 
     add(username: string): void {
         const connection = new LiveConnection(username);
@@ -43,19 +50,19 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe();
+                .subscribe((event: IChatEvent) => this.client.emit('tiktok.chat', event));
 
             connection
                 .onEnd()
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe();
+                .subscribe((event: IEndEvent) => this.client.emit('tiktok.end', event));
 
             const $disconnected_sub = $disconnected
                 .subscribe(() => {
                     $disconnected_sub.unsubscribe();
                 });
-        } catch (err) {}
+        } catch (err) { }
     }
 }
