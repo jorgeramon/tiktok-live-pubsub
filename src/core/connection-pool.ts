@@ -8,8 +8,9 @@ import { LiveConnection } from "./live-connection";
 
 // NPM
 import { takeUntil } from "rxjs";
-import { IEndEvent } from "@interfaces/end-event";
-import { IChatEvent } from "@interfaces/chat-event";
+import { IChatMessage } from "@interfaces/chat-message";
+import { IEndMessage } from "@interfaces/end-message";
+import { IOnlineMessage } from "@interfaces/online-message";
 
 @Injectable()
 export class ConnectionPool {
@@ -43,7 +44,16 @@ export class ConnectionPool {
         try {
             await connection.connect();
 
-            this.client.emit('tiktok.online', connection.state);
+            this.client.emit('tiktok.online', {
+                title: connection.state!.title,
+                share_url: connection.state!.title,
+                stream_id: connection.state!.stream_id,
+                owner_id: connection.state!.owner_user_id,
+                owner_nickname: connection.state!.roomInfo.owner.nickname,
+                picture_large: connection.state!.roomInfo.owner.avatar_large.url_list[0],
+                picture_medium: connection.state!.roomInfo.owner.avatar_medium.url_list[0],
+                picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]
+            } as IOnlineMessage);
 
             const $disconnected = connection.onDisconnected();
 
@@ -52,14 +62,14 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((event: IChatEvent) => this.client.emit('tiktok.chat', event));
+                .subscribe((message: IChatMessage) => this.client.emit('tiktok.chat', message));
 
             connection
                 .onEnd()
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((event: IEndEvent) => this.client.emit('tiktok.end', event));
+                .subscribe((message: IEndMessage) => this.client.emit('tiktok.end', message));
 
             const $disconnected_sub = $disconnected
                 .subscribe(() => {

@@ -1,6 +1,6 @@
 export interface IChatEvent {
     comment: string;
-    userId: string;
+    userId: bigint;
     uniqueId: string;
     nickname: string;
     profilePictureUrl: string;
@@ -9,5 +9,4 @@ export interface IChatEvent {
     isSubscriber: boolean;
     followRole: 0 | 1 | 2;
     msgId: string;
-    from_live: string;
 }

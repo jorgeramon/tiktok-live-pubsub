@@ -5,6 +5,8 @@ import { Logger } from '@nestjs/common';
 import { ILiveState } from '@interfaces/live-state';
 import { IChatEvent } from '@interfaces/chat-event';
 import { IEndEvent } from '@interfaces/end-event';
+import { IChatMessage } from '@interfaces/chat-message';
+import { IEndMessage } from '@interfaces/end-message';
 
 // Exceptions
 import { UnexpectedLiveConnectionException } from '@exceptions/unexpected-live-connection';
@@ -24,8 +26,8 @@ export class LiveConnection {
     private connection: WebcastPushConnection;
 
     // Events
-    private $chat: Observable<IChatEvent> | null = null;
-    private $end: Observable<IEndEvent> | null = null;
+    private $chat: Observable<IChatMessage> | null = null;
+    private $end: Observable<IEndMessage> | null = null;
     private $disconnected: Observable<void> | null = null;
 
     constructor(public readonly username: string) {
@@ -68,20 +70,35 @@ export class LiveConnection {
         }
     }
 
-    onChat(): Observable<IChatEvent> {
+    onChat(): Observable<IChatMessage> {
         if (!this.$chat) {
-            this.$chat = new Observable((subscriber: Subscriber<IChatEvent>) => {
-                this.connection.on('chat', data => subscriber.next({ ...data, from_live: this.username }));
+            this.$chat = new Observable((subscriber: Subscriber<IChatMessage>) => {
+                this.connection.on('chat', (event: IChatEvent) => subscriber.next({
+                    comment: event.comment,
+                    is_moderator: event.isModerator,
+                    is_new_gifter: event.isNewGifter,
+                    is_subscriber: event.isSubscriber,
+                    user_id: event.userId,
+                    user_nickname: event.uniqueId,
+                    user_picture: event.profilePictureUrl,
+                    owner_id: this.state!.owner_user_id,
+                    owner_nickname: this.state!.roomInfo.owner.nickname,
+                    stream_id: this.state!.stream_id,
+                }));
             });
         }
 
         return this.$chat;
     }
 
-    onEnd(): Observable<IEndEvent> {
+    onEnd(): Observable<IEndMessage> {
         if (!this.$end) {
-            this.$end = new Observable((subscriber: Subscriber<IEndEvent>) => {
-                this.connection.on('streamEnd', data => subscriber.next({ ...data, from_live: this.username }));
+            this.$end = new Observable((subscriber: Subscriber<IEndMessage>) => {
+                this.connection.on('streamEnd', (_: IEndEvent) => subscriber.next({ 
+                    owner_id: this.state!.owner_user_id,
+                    owner_nickname: this.state!.roomInfo.owner.nickname,
+                    stream_id: this.state!.stream_id,
+                 }));
             });
         }
 
