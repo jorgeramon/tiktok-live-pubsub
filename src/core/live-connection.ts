@@ -18,17 +18,17 @@ import { Observable, Subscriber } from 'rxjs';
 
 export class LiveConnection {
 
-    private readonly logger: Logger = new Logger(LiveConnection.name);
+    public state: ILiveState | null = null;
 
+    private readonly logger: Logger = new Logger(LiveConnection.name);
     private connection: WebcastPushConnection;
-    private state: ILiveState | null = null;
 
     // Events
     private $chat: Observable<IChatEvent> | null = null;
     private $end: Observable<IEndEvent> | null = null;
     private $disconnected: Observable<void> | null = null;
 
-    constructor(private readonly username: string) {
+    constructor(public readonly username: string) {
         this.connection = new WebcastPushConnection(this.username);
     }
 
@@ -39,7 +39,7 @@ export class LiveConnection {
     async connect(): Promise<void> {
         try {
             this.logger.debug(`Connecting to ${this.username} live...`);
-            this.state = await this.connection.connect();
+            this.state = { ...await this.connection.connect(), from_live: this.username };
             this.logger.debug(`${this.username} is online`);
         } catch (err) {
             if (err.message.includes('user_not_found')) {
@@ -71,7 +71,7 @@ export class LiveConnection {
     onChat(): Observable<IChatEvent> {
         if (!this.$chat) {
             this.$chat = new Observable((subscriber: Subscriber<IChatEvent>) => {
-                this.connection.on('chat', data => subscriber.next(data));
+                this.connection.on('chat', data => subscriber.next({ ...data, from_live: this.username }));
             });
         }
 
@@ -81,7 +81,7 @@ export class LiveConnection {
     onEnd(): Observable<IEndEvent> {
         if (!this.$end) {
             this.$end = new Observable((subscriber: Subscriber<IEndEvent>) => {
-                this.connection.on('streamEnd', data => subscriber.next(data));
+                this.connection.on('streamEnd', data => subscriber.next({ ...data, from_live: this.username }));
             });
         }
 

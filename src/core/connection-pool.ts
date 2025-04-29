@@ -43,6 +43,8 @@ export class ConnectionPool {
         try {
             await connection.connect();
 
+            this.client.emit('tiktok.online', connection.state);
+
             const $disconnected = connection.onDisconnected();
 
             connection

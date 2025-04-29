@@ -3,11 +3,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 // Core
 import { ConnectionPool } from '@core/connection-pool';
+import { Startup } from '@core/startup';
 
 // Schemas
 import { Account, AccountSchema } from '@schemas/account';
@@ -17,7 +17,6 @@ import { AccountRepository } from '@repositories/account';
 
 // Services
 import { ManagementService } from '@services/management';
-import { Startup } from '@services/startup';
 
 // Other
 import { Environment } from '@enums/environment';
@@ -48,7 +47,6 @@ import { Environment } from '@enums/environment';
       }),
     }]),
     ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
   ],
   controllers: [],
   providers: [ConnectionPool, Startup, AccountRepository, ManagementService],

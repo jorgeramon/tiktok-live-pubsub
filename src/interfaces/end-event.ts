@@ -2,5 +2,6 @@
 import { EndAction } from "@enums/end-action";
 
 export interface IEndEvent {
-    actionId: EndAction
+    actionId: EndAction;
+    from_live: string;
 }

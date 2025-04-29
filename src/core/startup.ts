@@ -31,5 +31,7 @@ export class Startup implements OnApplicationBootstrap {
         for (const account of accounts) {
             this.connection_pool.add(account.username);
         }
+
+        this.connection_pool.add('lukegeee')
     }
 }
