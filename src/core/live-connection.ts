@@ -81,9 +81,9 @@ export class LiveConnection {
                     user_id: event.userId,
                     user_nickname: event.uniqueId,
                     user_picture: event.profilePictureUrl,
-                    owner_id: this.state!.owner_user_id,
+                    owner_id: this.state!.roomInfo.owner_user_id,
                     owner_nickname: this.state!.roomInfo.owner.nickname,
-                    stream_id: this.state!.stream_id,
+                    stream_id: this.state!.roomInfo.stream_id,
                 }));
             });
         }
@@ -95,9 +95,9 @@ export class LiveConnection {
         if (!this.$end) {
             this.$end = new Observable((subscriber: Subscriber<IEndMessage>) => {
                 this.connection.on('streamEnd', (_: IEndEvent) => subscriber.next({ 
-                    owner_id: this.state!.owner_user_id,
+                    owner_id: this.state!.roomInfo.owner_user_id,
                     owner_nickname: this.state!.roomInfo.owner.nickname,
-                    stream_id: this.state!.stream_id,
+                    stream_id: this.state!.roomInfo.stream_id,
                  }));
             });
         }

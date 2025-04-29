@@ -45,10 +45,10 @@ export class ConnectionPool {
             await connection.connect();
 
             this.client.emit('tiktok.online', {
-                title: connection.state!.title,
-                share_url: connection.state!.title,
-                stream_id: connection.state!.stream_id,
-                owner_id: connection.state!.owner_user_id,
+                title: connection.state!.roomInfo.title,
+                share_url: connection.state!.roomInfo.share_url,
+                stream_id: connection.state!.roomInfo.stream_id,
+                owner_id: connection.state!.roomInfo.owner_user_id,
                 owner_nickname: connection.state!.roomInfo.owner.nickname,
                 picture_large: connection.state!.roomInfo.owner.avatar_large.url_list[0],
                 picture_medium: connection.state!.roomInfo.owner.avatar_medium.url_list[0],

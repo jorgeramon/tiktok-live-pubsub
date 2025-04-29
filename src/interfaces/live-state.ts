@@ -13,12 +13,12 @@ interface IOwner {
 
 interface IRoomInfo {
     owner: IOwner;
-}
-
-export interface ILiveState {
     title: string;
     owner_user_id: bigint;
     share_url: string;
     stream_id: bigint;
+}
+
+export interface ILiveState {
     roomInfo: IRoomInfo;
 }
