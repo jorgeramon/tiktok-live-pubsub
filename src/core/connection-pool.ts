@@ -52,7 +52,7 @@ export class ConnectionPool {
     private async _connect(connection: LiveConnection): Promise<void> {
         try {
             await connection.connect();
-            
+
             const online_message: IOnlineMessage = {
                 title: connection.state!.roomInfo.title,
                 share_url: connection.state!.roomInfo.share_url,
@@ -64,7 +64,7 @@ export class ConnectionPool {
                 picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]
             };
 
-            this.client.send(OutputEvent.ONLINE, online_message);
+            this.client.emit(OutputEvent.ONLINE, online_message);
             await this.cache_service.setOnlineStatus(online_message);
 
             const $disconnected = connection.onDisconnected();
@@ -74,7 +74,7 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IChatMessage) => this.client.send(OutputEvent.CHAT, message));
+                .subscribe((message: IChatMessage) => this.client.emit(OutputEvent.CHAT, message));
 
             connection
                 .onEnd()
@@ -82,7 +82,7 @@ export class ConnectionPool {
                     takeUntil($disconnected)
                 )
                 .subscribe((message: IEndMessage) => {
-                    this.client.send(OutputEvent.END, message);
+                    this.client.emit(OutputEvent.END, message);
                     this.cache_service.removeOnlineStatus(message.owner_nickname);
                 });
 
