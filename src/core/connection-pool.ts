@@ -38,11 +38,11 @@ export class ConnectionPool {
 
     @Cron('* * * * *')
     async connect(): Promise<void> {
-        this.logger.log('Connection Pool Task');
+        this.logger.debug('Connection Pool Task');
 
         const pending = this.pool.filter(connection => !connection.is_online);
 
-        this.logger.log(`Pending connections: ${pending.length}`);
+        this.logger.debug(`Pending connections: ${pending.length}`);
 
         for (const connection of pending) {
             this._connect(connection);
@@ -52,9 +52,7 @@ export class ConnectionPool {
     private async _connect(connection: LiveConnection): Promise<void> {
         try {
             await connection.connect();
-
-            this.logger.log(`Account ${connection.state!.roomInfo.owner.display_id.toLowerCase()} is online`);
-
+            
             const online_message: IOnlineMessage = {
                 title: connection.state!.roomInfo.title,
                 share_url: connection.state!.roomInfo.share_url,
@@ -66,7 +64,7 @@ export class ConnectionPool {
                 picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]
             };
 
-            this.client.emit(OutputEvent.ONLINE, online_message);
+            this.client.send(OutputEvent.ONLINE, online_message);
             await this.cache_service.setOnlineStatus(online_message);
 
             const $disconnected = connection.onDisconnected();
@@ -76,7 +74,7 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IChatMessage) => this.client.emit(OutputEvent.CHAT, message));
+                .subscribe((message: IChatMessage) => this.client.send(OutputEvent.CHAT, message));
 
             connection
                 .onEnd()
@@ -84,7 +82,7 @@ export class ConnectionPool {
                     takeUntil($disconnected)
                 )
                 .subscribe((message: IEndMessage) => {
-                    this.client.emit(OutputEvent.END, message);
+                    this.client.send(OutputEvent.END, message);
                     this.cache_service.removeOnlineStatus(message.owner_nickname);
                 });
 
@@ -92,6 +90,8 @@ export class ConnectionPool {
                 .subscribe(() => {
                     $disconnected_sub.unsubscribe();
                 });
-        } catch (err) { }
+        } catch (err) { 
+            this.logger.error(`Unexpected error ocurred while connection to ${connection.username}: ${err.message}`)
+        }
     }
 }

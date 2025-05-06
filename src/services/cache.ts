@@ -1,12 +1,14 @@
 // NestJS
 import { Cache } from "@nestjs/cache-manager";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
 // Interfaces
 import { IOnlineMessage } from "@interfaces/online-message";
 
 @Injectable()
 export class CacheService {
+
+    private readonly logger: Logger = new Logger(CacheService.name);
 
     constructor (private readonly cache_manager: Cache) {}
 
@@ -15,6 +17,7 @@ export class CacheService {
     }
 
     async setOnlineStatus(message: IOnlineMessage): Promise<void> {
+        this.logger.debug(`Caching ${message.owner_nickname} online status`);
         await this.cache_manager.set(message.owner_nickname, message);
     }
 

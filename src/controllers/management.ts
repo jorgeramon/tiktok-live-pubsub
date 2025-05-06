@@ -1,5 +1,5 @@
 // NestJS
-import { Controller } from "@nestjs/common";
+import { Controller, Logger } from "@nestjs/common";
 import { MessagePattern, Payload } from "@nestjs/microservices";
 
 // Enums
@@ -12,8 +12,13 @@ import { IOnlineMessage } from "@interfaces/online-message";
 import { CacheService } from "@services/cache";
 import { ManagementService } from "@services/management";
 
+// NPM
+import { from, Observable } from "rxjs";
+
 @Controller()
 export class ManagementController {
+
+    private readonly logger: Logger = new Logger(ManagementController.name);
 
     constructor (
         private readonly management_service: ManagementService,
@@ -21,7 +26,7 @@ export class ManagementController {
     ) {}
 
     @MessagePattern(InputEvent.IS_ONLINE)
-    isOnline(@Payload() nickname: string): Promise<IOnlineMessage | null> {
-        return this.cache_service.getOnlineStatus(nickname);
+    isOnline(@Payload() nickname: string): Observable<IOnlineMessage | null> {
+        return from(this.cache_service.getOnlineStatus(nickname));
     }
 }
