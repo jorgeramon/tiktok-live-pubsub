@@ -10,6 +10,9 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ConnectionPool } from '@core/connection-pool';
 import { Startup } from '@core/startup';
 
+// Controllers
+import { ManagementController } from '@controllers/management';
+
 // Schemas
 import { Account, AccountSchema } from '@schemas/account';
 
@@ -20,7 +23,7 @@ import { AccountRepository } from '@repositories/account';
 import { ManagementService } from '@services/management';
 import { CacheService } from '@services/cache';
 
-// Other
+// Enums
 import { Environment } from '@enums/environment';
 
 @Module({
@@ -51,7 +54,9 @@ import { Environment } from '@enums/environment';
     CacheModule.register(),
     ScheduleModule.forRoot(),
   ],
-  controllers: [],
+  controllers: [
+    ManagementController
+  ],
   providers: [ConnectionPool, Startup, AccountRepository, ManagementService, CacheService],
 })
 export class AppModule { }

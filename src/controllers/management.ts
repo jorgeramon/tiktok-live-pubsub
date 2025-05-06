@@ -27,6 +27,7 @@ export class ManagementController {
 
     @MessagePattern(InputEvent.IS_ONLINE)
     isOnline(@Payload() nickname: string): Observable<IOnlineMessage | null> {
+        this.logger.debug(`Checking if ${nickname} is online`);
         return from(this.cache_service.getOnlineStatus(nickname));
     }
 }
