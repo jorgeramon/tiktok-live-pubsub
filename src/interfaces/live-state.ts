@@ -8,7 +8,7 @@ interface IOwner {
     avatar_medium: IOwnerAvatar,
     avatar_thumb: IOwnerAvatar,
     bio_description: string,
-    nickname: string;
+    display_id: string;
 }
 
 interface IRoomInfo {

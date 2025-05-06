@@ -11,6 +11,7 @@ import { takeUntil } from "rxjs";
 import { IChatMessage } from "@interfaces/chat-message";
 import { IEndMessage } from "@interfaces/end-message";
 import { IOnlineMessage } from "@interfaces/online-message";
+import { MessageBrokerEvent } from "@enums/event";
 
 @Injectable()
 export class ConnectionPool {
@@ -22,18 +23,18 @@ export class ConnectionPool {
         @Inject('MESSAGE_BROKER') private readonly client: ClientProxy
     ) { }
 
-    add(username: string): void {
-        const connection = new LiveConnection(username);
+    add(nickname: string): void {
+        const connection = new LiveConnection(nickname);
         this.pool.push(connection);
     }
 
     @Cron('* * * * *')
     async connect(): Promise<void> {
-        this.logger.debug('Connection Pool Task');
+        this.logger.log('Connection Pool Task');
 
         const pending = this.pool.filter(connection => !connection.is_online);
 
-        this.logger.debug(`Pending connections: ${pending.length}`);
+        this.logger.log(`Pending connections: ${pending.length}`);
 
         for (const connection of pending) {
             this._connect(connection);
@@ -44,12 +45,16 @@ export class ConnectionPool {
         try {
             await connection.connect();
 
-            this.client.emit('tiktok.online', {
+            console.log(connection.state);
+
+            this.logger.log(`Account ${connection.state!.roomInfo.owner.display_id.toLowerCase()} is online`);
+
+            this.client.emit(MessageBrokerEvent.ONLINE, {
                 title: connection.state!.roomInfo.title,
                 share_url: connection.state!.roomInfo.share_url,
                 stream_id: connection.state!.roomInfo.stream_id,
                 owner_id: connection.state!.roomInfo.owner_user_id,
-                owner_nickname: connection.state!.roomInfo.owner.nickname.toLowerCase(),
+                owner_nickname: connection.state!.roomInfo.owner.display_id.toLowerCase(),
                 picture_large: connection.state!.roomInfo.owner.avatar_large.url_list[0],
                 picture_medium: connection.state!.roomInfo.owner.avatar_medium.url_list[0],
                 picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]
@@ -62,14 +67,14 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IChatMessage) => this.client.emit('tiktok.chat', message));
+                .subscribe((message: IChatMessage) => this.client.emit(MessageBrokerEvent.CHAT, message));
 
             connection
                 .onEnd()
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IEndMessage) => this.client.emit('tiktok.end', message));
+                .subscribe((message: IEndMessage) => this.client.emit(MessageBrokerEvent.END, message));
 
             const $disconnected_sub = $disconnected
                 .subscribe(() => {

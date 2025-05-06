@@ -41,7 +41,7 @@ export class LiveConnection {
     async connect(): Promise<void> {
         try {
             this.logger.debug(`Connecting to ${this.username} live...`);
-            this.state = { ...await this.connection.connect(), from_live: this.username };
+            this.state = { ...await this.connection.connect() };
             this.logger.debug(`${this.username} is online`);
         } catch (err) {
             if (err.message.includes('user_not_found')) {
@@ -82,7 +82,7 @@ export class LiveConnection {
                     user_nickname: event.uniqueId.toLowerCase(),
                     user_picture: event.profilePictureUrl,
                     owner_id: this.state!.roomInfo.owner_user_id,
-                    owner_nickname: this.state!.roomInfo.owner.nickname.toLowerCase(),
+                    owner_nickname: this.state!.roomInfo.owner.display_id.toLowerCase(),
                     stream_id: this.state!.roomInfo.stream_id,
                 }));
             });
@@ -96,7 +96,7 @@ export class LiveConnection {
             this.$end = new Observable((subscriber: Subscriber<IEndMessage>) => {
                 this.connection.on('streamEnd', (_: IEndEvent) => subscriber.next({ 
                     owner_id: this.state!.roomInfo.owner_user_id,
-                    owner_nickname: this.state!.roomInfo.owner.nickname.toLowerCase(),
+                    owner_nickname: this.state!.roomInfo.owner.display_id.toLowerCase(),
                     stream_id: this.state!.roomInfo.stream_id,
                  }));
             });
