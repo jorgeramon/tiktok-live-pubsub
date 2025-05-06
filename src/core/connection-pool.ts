@@ -45,8 +45,6 @@ export class ConnectionPool {
         try {
             await connection.connect();
 
-            console.log(connection.state);
-
             this.logger.log(`Account ${connection.state!.roomInfo.owner.display_id.toLowerCase()} is online`);
 
             this.client.emit(MessageBrokerEvent.ONLINE, {
