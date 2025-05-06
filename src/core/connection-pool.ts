@@ -49,7 +49,7 @@ export class ConnectionPool {
                 share_url: connection.state!.roomInfo.share_url,
                 stream_id: connection.state!.roomInfo.stream_id,
                 owner_id: connection.state!.roomInfo.owner_user_id,
-                owner_nickname: connection.state!.roomInfo.owner.nickname,
+                owner_nickname: connection.state!.roomInfo.owner.nickname.toLowerCase(),
                 picture_large: connection.state!.roomInfo.owner.avatar_large.url_list[0],
                 picture_medium: connection.state!.roomInfo.owner.avatar_medium.url_list[0],
                 picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]

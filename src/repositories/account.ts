@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
 // Schemas
-import { Account, AccountDocument, AccountSchema } from "@schemas/account";
+import { Account, AccountDocument } from "@schemas/account";
 
 // Interfaces
 import { IAccount } from "@interfaces/account";
@@ -24,8 +24,8 @@ export class AccountRepository {
         return documents.map(document => document.toJSON()) as IAccount[];
     }
 
-    async findOneByUsername(username: string): Promise<IAccount | null> {
-        const document: AccountDocument | null = await this.model.findOne({ username });
+    async findOneByNickname(nickname: string): Promise<IAccount | null> {
+        const document: AccountDocument | null = await this.model.findOne({ nickname });
         return document !== null ? document.toJSON() as IAccount : null;
     }
 

@@ -29,9 +29,7 @@ export class Startup implements OnApplicationBootstrap {
         this.logger.debug(`Found ${accounts.length} accounts`);
 
         for (const account of accounts) {
-            this.connection_pool.add(account.username);
+            this.connection_pool.add(account.nickname);
         }
-
-        this.connection_pool.add('lukegeee')
     }
 }

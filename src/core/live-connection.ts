@@ -79,10 +79,10 @@ export class LiveConnection {
                     is_new_gifter: event.isNewGifter,
                     is_subscriber: event.isSubscriber,
                     user_id: event.userId,
-                    user_nickname: event.uniqueId,
+                    user_nickname: event.uniqueId.toLowerCase(),
                     user_picture: event.profilePictureUrl,
                     owner_id: this.state!.roomInfo.owner_user_id,
-                    owner_nickname: this.state!.roomInfo.owner.nickname,
+                    owner_nickname: this.state!.roomInfo.owner.nickname.toLowerCase(),
                     stream_id: this.state!.roomInfo.stream_id,
                 }));
             });
@@ -96,7 +96,7 @@ export class LiveConnection {
             this.$end = new Observable((subscriber: Subscriber<IEndMessage>) => {
                 this.connection.on('streamEnd', (_: IEndEvent) => subscriber.next({ 
                     owner_id: this.state!.roomInfo.owner_user_id,
-                    owner_nickname: this.state!.roomInfo.owner.nickname,
+                    owner_nickname: this.state!.roomInfo.owner.nickname.toLowerCase(),
                     stream_id: this.state!.roomInfo.stream_id,
                  }));
             });

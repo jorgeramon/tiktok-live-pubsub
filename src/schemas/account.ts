@@ -6,7 +6,7 @@ import { Document } from 'mongoose';
 export class Account {
 
     @Prop({ required: true, unique: true })
-    username: string;
+    nickname: string;
 }
 
 export const AccountSchema =

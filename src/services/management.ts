@@ -20,13 +20,13 @@ export class ManagementService {
         private readonly account_repository: AccountRepository
     ) {}
 
-    async subscribe(username: string): Promise<void> {
-        let account: IAccount | null = await this.account_repository.findOneByUsername(username);
+    async subscribe(nickname: string): Promise<void> {
+        let account: IAccount | null = await this.account_repository.findOneByNickname(nickname);
 
         if (!account) {
-            account = await this.account_repository.save({ username });
+            account = await this.account_repository.save({ nickname });
         }
 
-        this.connection_pool.add(account.username);
+        this.connection_pool.add(account.nickname);
     }
 }
