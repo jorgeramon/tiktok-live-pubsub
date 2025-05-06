@@ -90,8 +90,10 @@ export class ConnectionPool {
                 .subscribe(() => {
                     $disconnected_sub.unsubscribe();
                 });
-        } catch (err) { 
-            this.logger.error(`Unexpected error ocurred while connection to ${connection.username}: ${err.message}`)
+        } catch (err) {
+            if (err.message) {
+                this.logger.error(`Unexpected error ocurred while connection to ${connection.username}: ${err.message}`);
+            }
         }
     }
 }
