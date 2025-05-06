@@ -6,12 +6,19 @@ import { ClientProxy } from "@nestjs/microservices";
 // Local
 import { LiveConnection } from "./live-connection";
 
-// NPM
-import { takeUntil } from "rxjs";
+// Enums
+import { OutputEvent } from "@enums/event";
+
+// Interfaces
 import { IChatMessage } from "@interfaces/chat-message";
 import { IEndMessage } from "@interfaces/end-message";
 import { IOnlineMessage } from "@interfaces/online-message";
-import { MessageBrokerEvent } from "@enums/event";
+
+// Services
+import { CacheService } from "@services/cache";
+
+// NPM
+import { takeUntil } from "rxjs";
 
 @Injectable()
 export class ConnectionPool {
@@ -20,7 +27,8 @@ export class ConnectionPool {
     private pool: LiveConnection[] = [];
 
     constructor(
-        @Inject('MESSAGE_BROKER') private readonly client: ClientProxy
+        @Inject('MESSAGE_BROKER') private readonly client: ClientProxy,
+        private readonly cache_service: CacheService
     ) { }
 
     add(nickname: string): void {
@@ -47,7 +55,7 @@ export class ConnectionPool {
 
             this.logger.log(`Account ${connection.state!.roomInfo.owner.display_id.toLowerCase()} is online`);
 
-            this.client.emit(MessageBrokerEvent.ONLINE, {
+            const online_message: IOnlineMessage = {
                 title: connection.state!.roomInfo.title,
                 share_url: connection.state!.roomInfo.share_url,
                 stream_id: connection.state!.roomInfo.stream_id,
@@ -56,7 +64,10 @@ export class ConnectionPool {
                 picture_large: connection.state!.roomInfo.owner.avatar_large.url_list[0],
                 picture_medium: connection.state!.roomInfo.owner.avatar_medium.url_list[0],
                 picture_thumb: connection.state!.roomInfo.owner.avatar_thumb.url_list[0]
-            } as IOnlineMessage);
+            };
+
+            this.client.emit(OutputEvent.ONLINE, online_message);
+            await this.cache_service.setOnlineStatus(online_message);
 
             const $disconnected = connection.onDisconnected();
 
@@ -65,14 +76,17 @@ export class ConnectionPool {
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IChatMessage) => this.client.emit(MessageBrokerEvent.CHAT, message));
+                .subscribe((message: IChatMessage) => this.client.emit(OutputEvent.CHAT, message));
 
             connection
                 .onEnd()
                 .pipe(
                     takeUntil($disconnected)
                 )
-                .subscribe((message: IEndMessage) => this.client.emit(MessageBrokerEvent.END, message));
+                .subscribe((message: IEndMessage) => {
+                    this.client.emit(OutputEvent.END, message);
+                    this.cache_service.removeOnlineStatus(message.owner_nickname);
+                });
 
             const $disconnected_sub = $disconnected
                 .subscribe(() => {
