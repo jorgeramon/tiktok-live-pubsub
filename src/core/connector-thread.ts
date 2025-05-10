@@ -17,7 +17,7 @@ parentPort?.on('message', (event: IConnectorEvent) => {
                 break;
 
             case ConnectorInputEvent.IS_ONLINE:
-                isOnline();
+                isOnline(event.data as string);
                 break;
         }
     } catch (err) {
@@ -25,21 +25,48 @@ parentPort?.on('message', (event: IConnectorEvent) => {
     }
 });
 
-async function isOnline(): Promise<void> {
+async function isOnline(username: string): Promise<void> {
     if (!connection) {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.IS_ONLINE,
-            data: false
+            data: { is_online: false }
         });
         return;
     }
 
-    const is_online = connection.fetchIsLive();
+    const is_online = await connection.fetchIsLive();
 
-    parentPort?.emit('message', {
-        type: ConnectorOutputEvent.IS_ONLINE,
-        data: is_online
-    });
+    if (is_online) {
+        const room_info_response: RoomInfoResponse = await connection.fetchRoomInfo();
+
+        const room_info: TiktokRoomInfo = room_info_response.data;
+
+        if (!room_info.owner) {
+            logger.warn(`${username} has no room info...`);
+        }
+
+        parentPort?.postMessage({
+            type: ConnectorOutputEvent.IS_ONLINE,
+            data: {
+                is_online,
+                room_info: {
+                    stream_id: room_info.stream_id_str,
+                    owner_id: room_info.owner?.id_str,
+                    owner_username: room_info.owner?.display_id?.toLowerCase(),
+                    title: room_info.title,
+                    share_url: room_info.share_url,
+                    picture_large: room_info.owner?.avatar_large?.url_list[0],
+                    picture_medium: room_info.owner?.avatar_medium?.url_list[0],
+                    picture_thumb: room_info.owner?.avatar_thumb?.url_list[0]
+                }
+            }
+        });
+    } else {
+        parentPort?.postMessage({
+            type: ConnectorOutputEvent.IS_ONLINE,
+            data: { is_online }
+        });
+    }
 }
 
 async function connect(username: string): Promise<void> {

@@ -1,3 +1,4 @@
+import { LiveController } from '@controllers/live';
 import { Connector } from '@core/connector';
 import { Startup } from '@core/startup';
 import { Environment, Microservice } from '@enums/environment';
@@ -35,6 +36,7 @@ import { Account, AccountSchema } from '@schemas/account';
     }]),
   ],
   controllers: [
+    LiveController
   ],
   providers: [Connector, Startup, AccountRepository],
 })

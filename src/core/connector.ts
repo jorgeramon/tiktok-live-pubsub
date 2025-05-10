@@ -5,6 +5,7 @@ import { IConnectorDisconnectedMessage } from "@interfaces/connector-disconnecte
 import { IConnectorEndMessage } from "@interfaces/connector-end-message";
 import { IConnectorEvent } from "@interfaces/connector-event";
 import { IConnectorOnlineMessage } from "@interfaces/connector-online-message";
+import { IConnectorOnlineStatusMessage } from "@interfaces/connector-online-status-message";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { Worker } from 'node:worker_threads';
@@ -31,6 +32,10 @@ export class Connector {
                     this.client.emit(MessageBrokerOutputEvent.CHAT, message.data as IConnectorChatMessage);
                     break;
 
+                case ConnectorOutputEvent.IS_ONLINE:
+                    this.client.emit(MessageBrokerOutputEvent.IS_ONLINE, message.data as IConnectorOnlineStatusMessage);
+                    break;
+
                 case ConnectorOutputEvent.END:
                     this.logger.debug(`${username} LIVE ended`);
                     this.client.emit(MessageBrokerOutputEvent.END, message.data as IConnectorEndMessage);
@@ -52,5 +57,16 @@ export class Connector {
         worker.postMessage({ type: ConnectorInputEvent.CONNECT, data: username });
 
         this.pool.set(username, worker);
+    }
+
+    isOnline(username: string): void {
+        const worker: Worker | undefined = this.pool.get(username);
+
+        if (!worker) {
+            this.logger.warn(`Tried to get ${username} online status but is not in the pool`);
+            return;
+        }
+
+        worker.postMessage({ type: ConnectorInputEvent.IS_ONLINE, data: username });
     }
 }
