@@ -27,7 +27,7 @@ parentPort?.on('message', (event: IConnectorEvent) => {
 
 async function isOnline(): Promise<void> {
     if (!connection) {
-        parentPort?.emit('message', {
+        parentPort?.postMessage({
             type: ConnectorOutputEvent.IS_ONLINE,
             data: false
         });
@@ -60,7 +60,7 @@ async function connect(username: string): Promise<void> {
         logger.warn(`${username} has no room info...`);
     }
 
-    parentPort?.emit('message', {
+    parentPort?.postMessage({
         type: ConnectorOutputEvent.ONLINE,
         data: {
             stream_id: room_info.stream_id_str,
@@ -81,7 +81,7 @@ async function connect(username: string): Promise<void> {
 
 function onChat(_room_info: TiktokRoomInfo) {
     return function (_event: WebcastChatMessage) {
-        parentPort?.emit('message', {
+        parentPort?.postMessage({
             type: ConnectorOutputEvent.CHAT,
             data: {
                 stream_id: _room_info.stream_id_str,
@@ -99,7 +99,7 @@ function onChat(_room_info: TiktokRoomInfo) {
 
 function onEnd(_room_info: TiktokRoomInfo) {
     return function (_event: WebcastControlMessage) {
-        parentPort?.emit('message', {
+        parentPort?.postMessage({
             type: ConnectorOutputEvent.END,
             data: {
                 stream_id: _room_info.stream_id_str,
@@ -112,7 +112,7 @@ function onEnd(_room_info: TiktokRoomInfo) {
 
 function onDisconnected(_room_info: TiktokRoomInfo) {
     return function () {
-        parentPort?.emit('message', {
+        parentPort?.postMessage({
             type: ConnectorOutputEvent.DISCONNECTED,
             data: {
                 stream_id: _room_info.stream_id_str,

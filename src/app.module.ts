@@ -1,6 +1,6 @@
 import { Connector } from '@core/connector';
 import { Startup } from '@core/startup';
-import { Environment } from '@enums/environment';
+import { Environment, Microservice } from '@enums/environment';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -9,7 +9,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AccountRepository } from '@repositories/account';
 import { Account, AccountSchema } from '@schemas/account';
-import { CacheService } from '@services/cache';
 
 @Module({
   imports: [
@@ -25,7 +24,7 @@ import { CacheService } from '@services/cache';
       { name: Account.name, schema: AccountSchema }
     ]),
     ClientsModule.registerAsync([{
-      name: 'MESSAGE_BROKER',
+      name: Microservice.MESSAGE_BROKER,
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -41,6 +40,6 @@ import { CacheService } from '@services/cache';
   ],
   controllers: [
   ],
-  providers: [Connector, Startup, AccountRepository, CacheService],
+  providers: [Connector, Startup, AccountRepository],
 })
 export class AppModule { }

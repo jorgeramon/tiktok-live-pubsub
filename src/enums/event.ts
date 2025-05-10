@@ -1,10 +1,10 @@
-export enum OutputEvent {
+export enum MessageBrokerOutputEvent {
     ONLINE = 'tiktok.online',
     CHAT = 'tiktok.chat',
     END = 'tiktok.end'
 }
 
-export enum InputEvent {
+export enum MessageBrokerInputEvent {
     IS_ONLINE = 'tiktok.is_online'
 }
 
