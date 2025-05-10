@@ -1,30 +1,15 @@
-// NestJS
+import { Connector } from '@core/connector';
+import { Startup } from '@core/startup';
+import { Environment } from '@enums/environment';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CacheModule } from '@nestjs/cache-manager';
-
-// Core
-import { ConnectionPool } from '@core/connection-pool';
-import { Startup } from '@core/startup';
-
-// Controllers
-import { ManagementController } from '@controllers/management';
-
-// Schemas
-import { Account, AccountSchema } from '@schemas/account';
-
-// Repositories
 import { AccountRepository } from '@repositories/account';
-
-// Services
-import { ManagementService } from '@services/management';
+import { Account, AccountSchema } from '@schemas/account';
 import { CacheService } from '@services/cache';
-
-// Enums
-import { Environment } from '@enums/environment';
 
 @Module({
   imports: [
@@ -55,8 +40,7 @@ import { Environment } from '@enums/environment';
     ScheduleModule.forRoot(),
   ],
   controllers: [
-    ManagementController
   ],
-  providers: [ConnectionPool, Startup, AccountRepository, ManagementService, CacheService],
+  providers: [Connector, Startup, AccountRepository, CacheService],
 })
 export class AppModule { }

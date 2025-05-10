@@ -1,25 +1,18 @@
-// NestJS
-import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
-
-// Core
-import { ConnectionPool } from "@core/connection-pool";
-
-// Repositories
-import { AccountRepository } from "@repositories/account";
-
-// Interfaces
+import { Connector } from "@core/connector";
 import { IAccount } from "@interfaces/account";
+import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { AccountRepository } from "@repositories/account";
 
 @Injectable()
 export class Startup implements OnApplicationBootstrap {
 
     private readonly logger: Logger = new Logger(Startup.name);
 
-    constructor (
-        private readonly connection_pool: ConnectionPool,
+    constructor(
+        private readonly connector: Connector,
         private readonly account_repository: AccountRepository
-    ) {}
-    
+    ) { }
+
     async onApplicationBootstrap(): Promise<void> {
 
         this.logger.debug('Starting application...');
@@ -29,7 +22,7 @@ export class Startup implements OnApplicationBootstrap {
         this.logger.debug(`Found ${accounts.length} accounts`);
 
         for (const account of accounts) {
-            this.connection_pool.add(account.nickname);
+            this.connector.start(account.username);
         }
     }
 }
