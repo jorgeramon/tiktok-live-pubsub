@@ -1,12 +1,10 @@
 import { Connector } from '@core/connector';
 import { Startup } from '@core/startup';
 import { Environment, Microservice } from '@enums/environment';
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AccountRepository } from '@repositories/account';
 import { Account, AccountSchema } from '@schemas/account';
 
@@ -35,8 +33,6 @@ import { Account, AccountSchema } from '@schemas/account';
         }
       }),
     }]),
-    CacheModule.register(),
-    ScheduleModule.forRoot(),
   ],
   controllers: [
   ],

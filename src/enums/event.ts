@@ -1,7 +1,8 @@
 export enum MessageBrokerOutputEvent {
     ONLINE = 'tiktok.online',
     CHAT = 'tiktok.chat',
-    END = 'tiktok.end'
+    END = 'tiktok.end',
+    DISCONNECTED = 'tiktok.disconnected'
 }
 
 export enum MessageBrokerInputEvent {

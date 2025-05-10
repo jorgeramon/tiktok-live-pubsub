@@ -1,6 +1,7 @@
 import { Microservice } from "@enums/environment";
 import { ConnectorInputEvent, ConnectorOutputEvent, MessageBrokerOutputEvent } from "@enums/event";
 import { IConnectorChatMessage } from "@interfaces/connector-chat-message";
+import { IConnectorDisconnectedMessage } from "@interfaces/connector-disconnected-message";
 import { IConnectorEndMessage } from "@interfaces/connector-end-message";
 import { IConnectorEvent } from "@interfaces/connector-event";
 import { IConnectorOnlineMessage } from "@interfaces/connector-online-message";
@@ -41,6 +42,7 @@ export class Connector {
 
                 case ConnectorOutputEvent.DISCONNECTED:
                     this.logger.debug(`Disconnected to ${username} LIVE`);
+                    this.client.emit(MessageBrokerOutputEvent.DISCONNECTED, message.data as IConnectorDisconnectedMessage);
                     this.pool.delete(username);
                     worker.terminate();
                     break;
