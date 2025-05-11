@@ -53,7 +53,6 @@ export class Connector {
                     this.logger.verbose(`Disconnected (${username}): ${JSON.stringify(message.data, null, 2)}`);
                     this.logger.debug(`Disconnected to ${username} LIVE`);
                     this.client.emit(MessageBrokerOutputEvent.DISCONNECTED, message.data as IConnectorDisconnectedMessage);
-                    this.pool.delete(username);
                     worker.postMessage({ type: ConnectorInputEvent.CONNECT, data: username });
                     break;
             }
