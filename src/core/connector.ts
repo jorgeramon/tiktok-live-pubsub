@@ -29,27 +29,32 @@ export class Connector {
         worker.on('message', (message: IConnectorEvent) => {
             switch (message.type) {
                 case ConnectorOutputEvent.CHAT:
+                    this.logger.verbose(`Chat (${username}): ${JSON.stringify(message.data, null, 2)}`);
                     this.client.emit(MessageBrokerOutputEvent.CHAT, message.data as IConnectorChatMessage);
                     break;
 
                 case ConnectorOutputEvent.IS_ONLINE:
-                    this.client.emit(MessageBrokerOutputEvent.IS_ONLINE, message.data as IConnectorOnlineStatusMessage);
+                    this.logger.verbose(`Online Status (${username}): ${JSON.stringify(message.data, null, 2)}`);
+                    this.client.emit(MessageBrokerOutputEvent.ONLINE_STATUS, message.data as IConnectorOnlineStatusMessage);
                     break;
 
                 case ConnectorOutputEvent.END:
+                    this.logger.verbose(`End (${username}): ${JSON.stringify(message.data, null, 2)}`);
                     this.logger.debug(`${username} LIVE ended`);
                     this.client.emit(MessageBrokerOutputEvent.END, message.data as IConnectorEndMessage);
                     break;
 
                 case ConnectorOutputEvent.ONLINE:
+                    this.logger.verbose(`Online (${username}): ${JSON.stringify(message.data, null, 2)}`);
                     this.client.emit(MessageBrokerOutputEvent.ONLINE, message.data as IConnectorOnlineMessage);
                     break;
 
                 case ConnectorOutputEvent.DISCONNECTED:
+                    this.logger.verbose(`Disconnected (${username}): ${JSON.stringify(message.data, null, 2)}`);
                     this.logger.debug(`Disconnected to ${username} LIVE`);
                     this.client.emit(MessageBrokerOutputEvent.DISCONNECTED, message.data as IConnectorDisconnectedMessage);
                     this.pool.delete(username);
-                    worker.terminate();
+                    worker.postMessage({ type: ConnectorInputEvent.CONNECT, data: username });
                     break;
             }
         });
@@ -59,7 +64,7 @@ export class Connector {
         this.pool.set(username, worker);
     }
 
-    isOnline(username: string): void {
+    checkOnlineStatus(username: string): void {
         const worker: Worker | undefined = this.pool.get(username);
 
         if (!worker) {

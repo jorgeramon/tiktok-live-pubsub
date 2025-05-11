@@ -12,6 +12,6 @@ export class LiveController {
 
     @EventPattern(MessageBrokerInputEvent.IS_ONLINE)
     isOnline(@Payload() username: string): void {
-        this.connector.isOnline(username);
+        this.connector.checkOnlineStatus(username);
     }
 }

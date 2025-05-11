@@ -3,7 +3,7 @@ import { IConnectorEvent } from '@interfaces/connector-event';
 import { TiktokRoomInfo } from '@interfaces/tiktok-room-info';
 import { Logger } from '@nestjs/common';
 import { parentPort, threadId } from 'node:worker_threads';
-import { ControlEvent, RoomInfoResponse, TikTokLiveConnection, WebcastChatMessage, WebcastControlMessage, WebcastEvent } from 'tiktok-live-connector';
+import { ControlEvent, RoomInfoResponse, TikTokLiveConnection, WebcastChatMessage, WebcastEvent } from 'tiktok-live-connector';
 
 const logger: Logger = new Logger(`Worker Thread ${threadId}`);
 
@@ -29,7 +29,7 @@ async function isOnline(username: string): Promise<void> {
     if (!connection) {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.IS_ONLINE,
-            data: { is_online: false }
+            data: { owner_username: username, is_online: false }
         });
         return;
     }
@@ -48,6 +48,7 @@ async function isOnline(username: string): Promise<void> {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.IS_ONLINE,
             data: {
+                owner_username: username,
                 is_online,
                 room_info: {
                     stream_id: room_info.stream_id_str,
@@ -64,7 +65,7 @@ async function isOnline(username: string): Promise<void> {
     } else {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.IS_ONLINE,
-            data: { is_online }
+            data: { owner_username: username, is_online }
         });
     }
 }
@@ -106,45 +107,45 @@ async function connect(username: string): Promise<void> {
     connection.on(ControlEvent.DISCONNECTED, onDisconnected(room_info));
 }
 
-function onChat(_room_info: TiktokRoomInfo) {
-    return function (_event: WebcastChatMessage) {
+function onChat(room_info: TiktokRoomInfo) {
+    return function (event: WebcastChatMessage) {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.CHAT,
             data: {
-                stream_id: _room_info.stream_id_str,
-                owner_id: _room_info.owner?.id_str,
-                owner_username: _room_info.owner?.display_id?.toLowerCase(),
-                comment: _event.comment,
-                user_id: _event.user?.userId,
-                user_username: _event.user?.uniqueId,
-                user_nickname: _event.user?.nickname,
-                user_picture: _event.user?.profilePicture?.urls[0]
+                stream_id: room_info.stream_id_str,
+                owner_id: room_info.owner?.id_str,
+                owner_username: room_info.owner?.display_id?.toLowerCase(),
+                comment: event.comment,
+                user_id: event.user?.userId,
+                user_username: event.user?.uniqueId,
+                user_nickname: event.user?.nickname,
+                user_picture: event.user?.profilePicture?.urls[0]
             }
         });
     }
 }
 
-function onEnd(_room_info: TiktokRoomInfo) {
-    return function (_event: WebcastControlMessage) {
+function onEnd(room_info: TiktokRoomInfo) {
+    return function () {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.END,
             data: {
-                stream_id: _room_info.stream_id_str,
-                owner_id: _room_info.owner?.id_str,
-                owner_username: _room_info.owner?.display_id?.toLowerCase(),
+                stream_id: room_info.stream_id_str,
+                owner_id: room_info.owner?.id_str,
+                owner_username: room_info.owner?.display_id?.toLowerCase(),
             }
         });
     }
 }
 
-function onDisconnected(_room_info: TiktokRoomInfo) {
+function onDisconnected(room_info: TiktokRoomInfo) {
     return function () {
         parentPort?.postMessage({
             type: ConnectorOutputEvent.DISCONNECTED,
             data: {
-                stream_id: _room_info.stream_id_str,
-                owner_id: _room_info.owner?.id_str,
-                owner_username: _room_info.owner?.display_id?.toLowerCase(),
+                stream_id: room_info.stream_id_str,
+                owner_id: room_info.owner?.id_str,
+                owner_username: room_info.owner?.display_id?.toLowerCase(),
             }
         });
     }
