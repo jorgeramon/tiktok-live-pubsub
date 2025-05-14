@@ -10,6 +10,7 @@ jobs:
       - name: Deploying code in server
         uses: appleboy/ssh-action@v1.0.0
         with:
+          command_timeout: 5m
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}

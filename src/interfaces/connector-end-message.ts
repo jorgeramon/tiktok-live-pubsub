@@ -1,3 +1,3 @@
-import { IConnectorMessage } from "./connector-message";
+import { IConnectorMessage } from '@/interfaces/connector-message';
 
-export interface IConnectorEndMessage extends IConnectorMessage { }
+export interface IConnectorEndMessage extends IConnectorMessage {}
