@@ -8,11 +8,13 @@ export enum MessageBrokerOutputEvent {
 
 export enum MessageBrokerInputEvent {
   IS_ONLINE = 'tiktok.is_online',
+  SEND_MESSAGE = 'tiktok.send_message',
 }
 
 export enum ConnectorInputEvent {
   CONNECT = 'connector.connect',
   IS_ONLINE = 'connector.is_online',
+  SEND_MESSAGE = 'connector.send_message',
 }
 
 export enum ConnectorOutputEvent {

@@ -1,5 +1,6 @@
 import { ConnectorInputEvent, ConnectorOutputEvent } from '@/enums/event';
 import { IConnectorEvent } from '@/interfaces/connector-event';
+import { IMessageEvent } from '@/interfaces/message-event';
 import { TiktokRoomInfo } from '@/interfaces/tiktok-room-info';
 import { Logger } from '@nestjs/common';
 import { parentPort, threadId } from 'node:worker_threads';
@@ -25,11 +26,31 @@ parentPort?.on('message', (event: IConnectorEvent) => {
       case ConnectorInputEvent.IS_ONLINE:
         isOnline(event.data as string);
         break;
+
+      case ConnectorInputEvent.SEND_MESSAGE:
+        sendMessage(event.data as IMessageEvent);
+        break;
     }
   } catch (err) {
     logger.error(`Unexpected error ocurred: ${err.message}`);
   }
 });
+
+async function sendMessage(event: IMessageEvent): Promise<void> {
+  if (!connection) {
+    return;
+  }
+
+  const webClient: any = connection.webClient as any;
+
+  this.logger.verbose(
+    `${event.username}: Setting session cookies to send a message`,
+  );
+  webClient.setSession(event.session_id, event.target_idc);
+
+  this.logger.verbose(`${event.username}: Sending message to LIVE`);
+  connection.sendMessage(event.message);
+}
 
 async function isOnline(username: string): Promise<void> {
   if (!connection) {
