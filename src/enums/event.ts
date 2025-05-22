@@ -24,4 +24,5 @@ export enum ConnectorOutputEvent {
   CHAT = 'output.connector.chat',
   END = 'output.connector.end',
   DISCONNECTED = 'output.connector.disconnected',
+  CONNECT_ERROR = 'output.connector.connect-error',
 }

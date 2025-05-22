@@ -41,14 +41,19 @@ async function sendMessage(event: IMessageEvent): Promise<void> {
     return;
   }
 
+  /*
+    Note: This doesn't work due to "setSession" method missing in TiktokWebClient class
+    For now we are using same cookies for all connections, from here.
+    
   const webClient: any = connection.webClient as any;
 
-  this.logger.verbose(
-    `${event.username}: Setting session cookies to send a message`,
+  logger.verbose(
+    `${event.owner_username}: Setting session cookies to send a message`,
   );
   webClient.setSession(event.session_id, event.target_idc);
+  */
 
-  this.logger.verbose(`${event.username}: Sending message to LIVE`);
+  logger.verbose(`${event.owner_username}: Sending message to LIVE`);
   connection.sendMessage(event.message);
 }
 
@@ -99,40 +104,51 @@ async function isOnline(username: string): Promise<void> {
 }
 
 async function connect(username: string): Promise<void> {
-  connection = new TikTokLiveConnection(username);
+  try {
+    connection = new TikTokLiveConnection(username, {
+      sessionId: process.env.TIKTOK_SESSION_ID,
+      ttTargetIdc: process.env.TIKTOK_TARGET_IDC,
+    } as any);
 
-  logger.debug(`Connecting to ${username} LIVE...`);
+    logger.debug(`Connecting to ${username} LIVE...`);
 
-  await connection.waitUntilLive();
+    await connection.waitUntilLive();
 
-  logger.debug(`${username} is online`);
+    logger.debug(`${username} is online`);
 
-  await connection.connect();
+    await connection.connect();
 
-  const room_info_response: RoomInfoResponse = await connection.fetchRoomInfo();
-  const room_info: TiktokRoomInfo = room_info_response.data;
+    const room_info_response: RoomInfoResponse =
+      await connection.fetchRoomInfo();
+    const room_info: TiktokRoomInfo = room_info_response.data;
 
-  if (!room_info.owner) {
-    logger.warn(`${username} has no room info...`);
+    if (!room_info.owner) {
+      logger.warn(`${username} has no room info...`);
+    }
+
+    parentPort?.postMessage({
+      type: ConnectorOutputEvent.ONLINE,
+      data: {
+        stream_id: room_info.stream_id_str,
+        owner_id: room_info.owner?.id_str,
+        owner_username: room_info.owner?.display_id?.toLowerCase(),
+        title: room_info.title,
+        share_url: room_info.share_url,
+        picture_large: room_info.owner?.avatar_large?.url_list[0],
+        picture_medium: room_info.owner?.avatar_medium?.url_list[0],
+        picture_thumb: room_info.owner?.avatar_thumb?.url_list[0],
+      },
+    });
+
+    connection.on(WebcastEvent.CHAT, onChat(room_info));
+    connection.on(WebcastEvent.STREAM_END, onEnd(room_info));
+    connection.on(ControlEvent.DISCONNECTED, onDisconnected(room_info));
+  } catch (err) {
+    logger.error(`Unexpected error when trying to connect: ${err.message}`);
+    parentPort?.postMessage({
+      type: ConnectorOutputEvent.CONNECT_ERROR,
+    });
   }
-
-  parentPort?.postMessage({
-    type: ConnectorOutputEvent.ONLINE,
-    data: {
-      stream_id: room_info.stream_id_str,
-      owner_id: room_info.owner?.id_str,
-      owner_username: room_info.owner?.display_id?.toLowerCase(),
-      title: room_info.title,
-      share_url: room_info.share_url,
-      picture_large: room_info.owner?.avatar_large?.url_list[0],
-      picture_medium: room_info.owner?.avatar_medium?.url_list[0],
-      picture_thumb: room_info.owner?.avatar_thumb?.url_list[0],
-    },
-  });
-
-  connection.on(WebcastEvent.CHAT, onChat(room_info));
-  connection.on(WebcastEvent.STREAM_END, onEnd(room_info));
-  connection.on(ControlEvent.DISCONNECTED, onDisconnected(room_info));
 }
 
 function onChat(room_info: TiktokRoomInfo) {

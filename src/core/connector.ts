@@ -87,6 +87,18 @@ export class Connector {
             data: username,
           });
           break;
+
+        case ConnectorOutputEvent.CONNECT_ERROR:
+          this.logger.verbose(
+            `Waiting 60 seconds to reconnect to ${username} LIVE...`,
+          );
+          setTimeout(() => {
+            this.logger.debug(`Reconnecting to ${username} LIVE...`);
+            worker.postMessage({
+              type: ConnectorInputEvent.CONNECT,
+              data: username,
+            });
+          }, 60000);
       }
     });
 
@@ -109,11 +121,11 @@ export class Connector {
   }
 
   sendMessage(event: IMessageEvent): void {
-    const worker: Worker | undefined = this.pool.get(event.username);
+    const worker: Worker | undefined = this.pool.get(event.owner_username);
 
     if (!worker) {
       this.logger.warn(
-        `Tried to send message to ${event.username} LIVE but is not in the pool`,
+        `Tried to send message to ${event.owner_username} LIVE but is not in the pool`,
       );
       return;
     }

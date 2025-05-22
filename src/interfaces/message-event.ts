@@ -1,5 +1,5 @@
 export interface IMessageEvent {
-  username: string;
+  owner_username: string;
   message: string;
   session_id: string;
   target_idc: string;
