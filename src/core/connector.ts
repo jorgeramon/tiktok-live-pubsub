@@ -27,7 +27,9 @@ export class Connector {
   start(username: string): void {
     this.logger.debug(`Starting new connection: ${username}`);
 
-    const worker = new Worker(`${__dirname}/worker/index.js`);
+    const worker = new Worker(`${__dirname}/worker/index.js`, {
+      workerData: username,
+    });
 
     worker.on('message', (message: IConnectorEvent) => {
       switch (message.type) {
