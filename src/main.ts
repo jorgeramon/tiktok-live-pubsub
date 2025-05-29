@@ -3,6 +3,9 @@ import { Environment } from '@/enums/environment';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import tracer from 'dd-trace';
+
+tracer.init();
 
 async function bootstrap() {
   const context = await NestFactory.createApplicationContext(ConfigModule);

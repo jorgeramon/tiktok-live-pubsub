@@ -10,7 +10,6 @@ import { IConnectorEndMessage } from '@/interfaces/connector-end-message';
 import { IConnectorEvent } from '@/interfaces/connector-event';
 import { IConnectorOnlineMessage } from '@/interfaces/connector-online-message';
 import { IConnectorOnlineStatusMessage } from '@/interfaces/connector-online-status-message';
-import { IMessageEvent } from '@/interfaces/message-event';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Worker } from 'node:worker_threads';
@@ -28,7 +27,7 @@ export class Connector {
   start(username: string): void {
     this.logger.debug(`Starting new connection: ${username}`);
 
-    const worker = new Worker(`${__dirname}/connector-thread.js`);
+    const worker = new Worker(`${__dirname}/worker/index.js`);
 
     worker.on('message', (message: IConnectorEvent) => {
       switch (message.type) {
@@ -84,7 +83,6 @@ export class Connector {
           );
           worker.postMessage({
             type: ConnectorInputEvent.CONNECT,
-            data: username,
           });
           break;
 
@@ -96,13 +94,12 @@ export class Connector {
             this.logger.debug(`Reconnecting to ${username} LIVE...`);
             worker.postMessage({
               type: ConnectorInputEvent.CONNECT,
-              data: username,
             });
           }, 60000);
       }
     });
 
-    worker.postMessage({ type: ConnectorInputEvent.CONNECT, data: username });
+    worker.postMessage({ type: ConnectorInputEvent.CONNECT });
 
     this.pool.set(username, worker);
   }
@@ -117,22 +114,6 @@ export class Connector {
       return;
     }
 
-    worker.postMessage({ type: ConnectorInputEvent.IS_ONLINE, data: username });
-  }
-
-  sendMessage(event: IMessageEvent): void {
-    const worker: Worker | undefined = this.pool.get(event.owner_username);
-
-    if (!worker) {
-      this.logger.warn(
-        `Tried to send message to ${event.owner_username} LIVE but is not in the pool`,
-      );
-      return;
-    }
-
-    worker.postMessage({
-      type: ConnectorInputEvent.SEND_MESSAGE,
-      data: event,
-    });
+    worker.postMessage({ type: ConnectorInputEvent.IS_ONLINE });
   }
 }

@@ -1,1 +1,1 @@
-export class UnexpectedLiveConnectionException extends Error {}
+export class UnableToConnectException extends Error {}
