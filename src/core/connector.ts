@@ -25,6 +25,11 @@ export class Connector {
   ) {}
 
   start(username: string): void {
+    if (this.pool.has(username)) {
+      this.logger.error(`Tried to start an existing worker: ${username}`);
+      return;
+    }
+
     this.logger.debug(`Starting new connection: ${username}`);
 
     const worker = new Worker(`${__dirname}/worker/index.js`, {
