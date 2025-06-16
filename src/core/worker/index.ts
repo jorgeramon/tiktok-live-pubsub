@@ -31,14 +31,13 @@ async function main() {
     } catch (err) {
       if (err instanceof UnableToConnectException) {
         logger.error(`Unable to connect to ${workerData} LIVE...`);
+        $listener.next({
+          type: ConnectorOutputEvent.CONNECT_ERROR,
+        });
       } else {
         logger.error(`Unexpecter error ocurred: ${err.message}`);
         logger.error(err.stack);
       }
-
-      $listener.next({
-        type: ConnectorOutputEvent.CONNECT_ERROR,
-      });
     }
   });
 }
