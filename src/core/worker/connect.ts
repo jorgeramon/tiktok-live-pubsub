@@ -63,8 +63,7 @@ export function connect(
 }
 
 function onChat($subject: Subject<IConnectorEvent>, room_info: TiktokRoomInfo) {
-  return (event: WebcastChatMessage) => {
-    console.log('Event', event);
+  return (event: WebcastChatMessage) =>
     $subject.next({
       type: ConnectorOutputEvent.CHAT,
       data: {
@@ -75,10 +74,9 @@ function onChat($subject: Subject<IConnectorEvent>, room_info: TiktokRoomInfo) {
         user_id: event.user?.userId,
         user_username: event.user?.uniqueId,
         user_nickname: event.user?.nickname,
-        user_picture: event.user?.profilePicture?.url,
+        user_picture: event.user?.profilePicture?.url[0],
       },
     });
-  };
 }
 
 function onEnd($subject: Subject<IConnectorEvent>, room_info: TiktokRoomInfo) {
