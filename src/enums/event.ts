@@ -26,3 +26,7 @@ export enum ConnectorOutputEvent {
   DISCONNECTED = 'output.connector.disconnected',
   CONNECT_ERROR = 'output.connector.connect-error',
 }
+
+export enum WorkerEvent {
+  EXIT = 'worker.exit',
+}

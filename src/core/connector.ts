@@ -3,6 +3,7 @@ import {
   ConnectorInputEvent,
   ConnectorOutputEvent,
   MessageBrokerOutputEvent,
+  WorkerEvent,
 } from '@/enums/event';
 import { IConnectorChatMessage } from '@/interfaces/connector-chat-message';
 import { IConnectorDisconnectedMessage } from '@/interfaces/connector-disconnected-message';
@@ -10,7 +11,9 @@ import { IConnectorEndMessage } from '@/interfaces/connector-end-message';
 import { IConnectorEvent } from '@/interfaces/connector-event';
 import { IConnectorOnlineMessage } from '@/interfaces/connector-online-message';
 import { IConnectorOnlineStatusMessage } from '@/interfaces/connector-online-status-message';
+import { IWorkerExitEvent } from '@/interfaces/worker-exit-event';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { Worker } from 'node:worker_threads';
 
@@ -22,6 +25,7 @@ export class Connector {
   constructor(
     @Inject(Microservice.MESSAGE_BROKER)
     private readonly client: ClientProxy,
+    private readonly event_emitter: EventEmitter2,
   ) {}
 
   start(username: string): void {
@@ -104,6 +108,22 @@ export class Connector {
             });
           }, 60000);
       }
+    });
+
+    worker.on('error', (err: Error) => {
+      this.logger.error(
+        `Error (${username}): Unexpected error ocurred: ${err.message}`,
+      );
+    });
+
+    worker.on('exit', (exit_code: number) => {
+      this.logger.debug(
+        `Exit (${username}): Finished with exit code: ${exit_code}`,
+      );
+      this.pool.delete(username);
+      this.event_emitter.emit(WorkerEvent.EXIT, {
+        username,
+      } as IWorkerExitEvent);
     });
 
     worker.postMessage({ type: ConnectorInputEvent.CONNECT });
