@@ -1,9 +1,17 @@
 export enum Environment {
-  MONGO_ATLAS = 'MONGO_ATLAS',
-  REDIS_HOST = 'REDIS_HOST',
-  REDIS_PORT = 'REDIS_PORT',
+  MongoAtlas = 'MONGO_ATLAS',
+  RedisHost = 'REDIS_HOST',
+  RedisPort = 'REDIS_PORT',
 }
 
 export enum Microservice {
-  MESSAGE_BROKER = 'MESSAGE_BROKER',
+  MessageBroker = 'MESSAGE_BROKER',
+}
+
+export enum QueueName {
+  LiveConnection = 'LIVE_CONNECTION',
+}
+
+export enum JobName {
+  StartConnection = 'START_CONNECTION',
 }

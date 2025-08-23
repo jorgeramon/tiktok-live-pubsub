@@ -13,18 +13,18 @@ async function bootstrap() {
 
   context.close();
 
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.REDIS,
-      options: {
-        host: config_service.get<string>(Environment.REDIS_HOST),
-        port: config_service.get<number>(Environment.REDIS_PORT),
-      },
-    },
-  );
+  const app = await NestFactory.create(AppModule);
 
-  await app.listen();
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.REDIS,
+    options: {
+      host: config_service.get<string>(Environment.RedisHost),
+      port: config_service.get<number>(Environment.RedisPort),
+    },
+  });
+
+  await app.startAllMicroservices();
+  await app.listen(3000);
 }
 
 bootstrap();

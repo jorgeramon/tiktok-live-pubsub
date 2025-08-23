@@ -1,18 +1,18 @@
-import { Connector } from '@/core/connector';
-import { WorkerEvent } from '@/enums/event';
+import { JobName, QueueName } from '@/enums/environment';
 import { IAccount } from '@/interfaces/account';
-import { IWorkerExitEvent } from '@/interfaces/worker-exit-event';
 import { AccountRepository } from '@/repositories/account';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class Startup implements OnApplicationBootstrap {
   private readonly logger: Logger = new Logger(Startup.name);
 
   constructor(
-    private readonly connector: Connector,
     private readonly account_repository: AccountRepository,
+    @InjectQueue(QueueName.LiveConnection)
+    private readonly queue: Queue,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -23,13 +23,7 @@ export class Startup implements OnApplicationBootstrap {
     this.logger.debug(`Found ${accounts.length} accounts`);
 
     for (const account of accounts) {
-      this.connector.start(account.username);
+      await this.queue.add(JobName.StartConnection, account.username);
     }
-  }
-
-  @OnEvent(WorkerEvent.EXIT)
-  restart(payload: IWorkerExitEvent) {
-    this.logger.debug(`Restarting worker: ${payload.username}`);
-    this.connector.start(payload.username);
   }
 }

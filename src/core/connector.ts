@@ -1,9 +1,8 @@
-import { Microservice } from '@/enums/environment';
+import { JobName, Microservice, QueueName } from '@/enums/environment';
 import {
   ConnectorInputEvent,
   ConnectorOutputEvent,
   MessageBrokerOutputEvent,
-  WorkerEvent,
 } from '@/enums/event';
 import { IConnectorChatMessage } from '@/interfaces/connector-chat-message';
 import { IConnectorDisconnectedMessage } from '@/interfaces/connector-disconnected-message';
@@ -11,10 +10,10 @@ import { IConnectorEndMessage } from '@/interfaces/connector-end-message';
 import { IConnectorEvent } from '@/interfaces/connector-event';
 import { IConnectorOnlineMessage } from '@/interfaces/connector-online-message';
 import { IConnectorOnlineStatusMessage } from '@/interfaces/connector-online-status-message';
-import { IWorkerExitEvent } from '@/interfaces/worker-exit-event';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
+import { Queue } from 'bullmq';
 import { Worker } from 'node:worker_threads';
 
 @Injectable()
@@ -23,9 +22,10 @@ export class Connector {
   private readonly logger: Logger = new Logger(Connector.name);
 
   constructor(
-    @Inject(Microservice.MESSAGE_BROKER)
+    @Inject(Microservice.MessageBroker)
     private readonly client: ClientProxy,
-    private readonly event_emitter: EventEmitter2,
+    @InjectQueue(QueueName.LiveConnection)
+    private readonly queue: Queue,
   ) {}
 
   start(username: string): void {
@@ -116,14 +116,12 @@ export class Connector {
       );
     });
 
-    worker.on('exit', (exit_code: number) => {
+    worker.on('exit', async (exit_code: number) => {
       this.logger.debug(
         `Exit (${username}): Finished with exit code: ${exit_code}`,
       );
       this.pool.delete(username);
-      this.event_emitter.emit(WorkerEvent.EXIT, {
-        username,
-      } as IWorkerExitEvent);
+      await this.queue.add(JobName.StartConnection, username, { delay: 30000 });
     });
 
     worker.postMessage({ type: ConnectorInputEvent.CONNECT });

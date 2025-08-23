@@ -1,12 +1,16 @@
+import { LiveConnectionConsumer } from '@/consumers/live-connection';
 import { LiveController } from '@/controllers/live';
 import { Connector } from '@/core/connector';
 import { Startup } from '@/core/startup';
-import { Environment, Microservice } from '@/enums/environment';
+import { Environment, Microservice, QueueName } from '@/enums/environment';
 import { AccountRepository } from '@/repositories/account';
 import { Account, AccountSchema } from '@/schemas/account';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -17,27 +21,51 @@ import { MongooseModule } from '@nestjs/mongoose';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>(Environment.MONGO_ATLAS),
+        uri: configService.get<string>(Environment.MongoAtlas),
       }),
     }),
     MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
     ClientsModule.registerAsync([
       {
-        name: Microservice.MESSAGE_BROKER,
+        name: Microservice.MessageBroker,
         imports: [ConfigModule],
         inject: [ConfigService],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.REDIS,
           options: {
-            host: configService.get<string>(Environment.REDIS_HOST),
-            port: configService.get<number>(Environment.REDIS_PORT),
+            host: configService.get<string>(Environment.RedisHost),
+            port: configService.get<number>(Environment.RedisPort),
           },
         }),
       },
     ]),
-    EventEmitterModule.forRoot(),
+    BullModule.registerQueueAsync({
+      name: QueueName.LiveConnection,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>(Environment.RedisHost),
+          port: configService.get<number>(Environment.RedisPort),
+        },
+      }),
+    }),
+    BullBoardModule.forRoot({
+      route: '/queues',
+      adapter: ExpressAdapter,
+    }),
+    BullBoardModule.forFeature({
+      name: QueueName.LiveConnection,
+      adapter: BullMQAdapter,
+    }),
   ],
-  controllers: [LiveController],
-  providers: [Connector, Startup, AccountRepository],
+  controllers: [],
+  providers: [
+    LiveController,
+    Connector,
+    Startup,
+    AccountRepository,
+    LiveConnectionConsumer,
+  ],
 })
 export class AppModule {}
