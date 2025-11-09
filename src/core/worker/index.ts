@@ -37,6 +37,9 @@ async function main() {
       } else {
         logger.error(`Unexpecter error ocurred: ${err.message}`);
         logger.error(err.stack);
+        $listener.next({
+          type: ConnectorOutputEvent.CONNECT_ERROR,
+        });
       }
     }
   });
